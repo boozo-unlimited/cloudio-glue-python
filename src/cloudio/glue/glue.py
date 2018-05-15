@@ -2,14 +2,28 @@
 
 
 from six import iteritems
+import os
 import inspect
 import logging
 
 
 from cloudio.interface.attribute_listener import AttributeListener
 
+version = ''
+# Get cloudio-glue-python version info from init file
+with open(os.path.dirname(os.path.realpath(__file__)) + '/../../__init__.py') as vf:
+    content = vf.readlines()
+    for line in content:
+        if '__version__' in line:
+            values = line.split('=')
+            version = values[1]
+            version = version.strip('\n')
+            version = version.replace('\'', '')
+            break
 
 logging.getLogger(__name__).setLevel(logging.INFO)  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+logging.info('cloudio-glue-python version: %s' % version)
 
 # Links:
 # - http://stackoverflow.com/questions/5189699/how-can-i-make-a-class-property-in-python
