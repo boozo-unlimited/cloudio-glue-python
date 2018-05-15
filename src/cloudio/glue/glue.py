@@ -249,8 +249,8 @@ class Model2CloudConnector(AttributeListener):
         """
         assert not inspect.ismethod(modelAttributeValue), 'Value must be of standard type!'
 
-            if self._attributeMapping.has_key(modelAttributeName):
         if (self.hasValidData() or force) and self._cloudioNode:
+            if modelAttributeName in self._attributeMapping:
                 # Get cloudio mapping for the model attribute
                 cloudioAttributeMapping = self._attributeMapping[modelAttributeName]
 
@@ -258,7 +258,7 @@ class Model2CloudConnector(AttributeListener):
                 locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
                                  cloudioAttributeMapping['objectName'], 'objects']
 
-                if cloudioAttributeMapping.has_key('toCloudioValueConverter'):
+                if 'toCloudioValueConverter' in cloudioAttributeMapping:
                     modelAttributeValue = cloudioAttributeMapping['toCloudioValueConverter'](modelAttributeValue)
 
                 # Get cloud.iO attribute
