@@ -18,12 +18,17 @@ with open(os.path.dirname(os.path.realpath(__file__)) + '/__init__.py') as vf:
             values = line.split('=')
             version = values[1]
             version = version.strip('\n')
+            version = version.strip('\r')
             version = version.replace('\'', '')
+            version = version.strip(' ')
             break
 
+# Enable logging
+logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.DEBUG)
 logging.getLogger(__name__).setLevel(logging.INFO)  # DEBUG, INFO, WARNING, ERROR, CRITICAL
-
-logging.info('cloudio-glue-python version: %s' % version)
+logging.getLogger(__name__).info('cloudio-glue-python version: %s' % version)
 
 # Links:
 # - http://stackoverflow.com/questions/5189699/how-can-i-make-a-class-property-in-python
