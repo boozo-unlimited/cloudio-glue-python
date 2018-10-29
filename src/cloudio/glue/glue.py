@@ -2,14 +2,33 @@
 
 
 from six import iteritems
+import os
 import inspect
 import logging
 
 
 from cloudio.interface.attribute_listener import AttributeListener
 
+version = ''
+# Get cloudio-glue-python version info from init file
+with open(os.path.dirname(os.path.realpath(__file__)) + '/__init__.py') as vf:
+    content = vf.readlines()
+    for line in content:
+        if '__version__' in line:
+            values = line.split('=')
+            version = values[1]
+            version = version.strip('\n')
+            version = version.strip('\r')
+            version = version.replace('\'', '')
+            version = version.strip(' ')
+            break
 
+# Enable logging
+logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.DEBUG)
 logging.getLogger(__name__).setLevel(logging.INFO)  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+logging.getLogger(__name__).info('cloudio-glue-python version: %s' % version)
 
 # Links:
 # - http://stackoverflow.com/questions/5189699/how-can-i-make-a-class-property-in-python
@@ -249,8 +268,8 @@ class Model2CloudConnector(AttributeListener):
         """
         assert not inspect.ismethod(modelAttributeValue), 'Value must be of standard type!'
 
-        if self.hasValidData() and self._cloudioNode:
-            if self._attributeMapping.has_key(modelAttributeName):
+        if (self.hasValidData() or force) and self._cloudioNode:
+            if modelAttributeName in self._attributeMapping:
                 # Get cloudio mapping for the model attribute
                 cloudioAttributeMapping = self._attributeMapping[modelAttributeName]
 
@@ -258,7 +277,7 @@ class Model2CloudConnector(AttributeListener):
                 locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
                                  cloudioAttributeMapping['objectName'], 'objects']
 
-                if cloudioAttributeMapping.has_key('toCloudioValueConverter'):
+                if 'toCloudioValueConverter' in cloudioAttributeMapping:
                     modelAttributeValue = cloudioAttributeMapping['toCloudioValueConverter'](modelAttributeValue)
 
                 # Get cloud.iO attribute
