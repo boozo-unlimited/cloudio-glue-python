@@ -186,9 +186,30 @@ class Model2CloudConnector(AttributeListener):
         for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
             # Add listener to attributes that can be changed from the cloud (constraint: 'write')
             if 'write' in cloudioAttributeMapping['constraints']:
-                locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
-                                 cloudioAttributeMapping['objectName'], 'objects']
-                cloudioAttribute = self._cloudioNode.findAttribute(locationStack)
+                if 'topic' in cloudioAttributeMapping:
+                    # take new style
+                    topic_levels = cloudioAttributeMapping['topic'].split('.')
+                    # Remove first entry if it is the name o the cloud.iO node
+                    if topic_levels[0] == self._cloudioNode.getName():
+                        topic_levels = topic_levels[1:]
+
+                    # Add entries 'objects' and 'attributes' as needed
+                    expanded_topic_levels = []
+                    for index, topic_level in enumerate(topic_levels):
+                        if index < len(topic_levels) - 1:
+                            expanded_topic_levels.append('objects')
+                        else:
+                            expanded_topic_levels.append('attributes')
+                        expanded_topic_levels.append(topic_level)
+
+                    # Reverse topicLevel entries
+                    location_stack = expanded_topic_levels[::-1]
+                else:
+                    self.log.warning('Mapping entries \'objectName\' and \'attributeName\' will be replaced by \'topic\''
+                                     ' in future releases! Consider updating your code!')
+                    location_stack = [cloudioAttributeMapping['attributeName'], 'attributes',
+                                     cloudioAttributeMapping['objectName'], 'objects']
+                cloudioAttribute = self._cloudioNode.findAttribute(location_stack)
 
                 if cloudioAttribute:
                     cloudioAttribute.addListener(self)
