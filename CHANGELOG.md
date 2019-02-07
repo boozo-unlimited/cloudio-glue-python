@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 - (2019-02-07)
+- Started to introduce 'topic' mapping entry. Will replace
+  'objectName' and 'attributeName' in the future
+
 ## 0.1.2 - (2018-10-28)
 ### Implemented enhancements:
 - Moved version info into sub-package
