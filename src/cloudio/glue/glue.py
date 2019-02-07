@@ -46,13 +46,13 @@ class cloudio_attribute(object):
         self._fget = fget
         self._fset = fset
 
-    def __get__(self, obj, type=None):
+    def __get__(self, obj, the_type=None):
         """
         :return: A value
         """
         try:
-            # Try if fget method is an other descriptor
-            return self._fget.__get__(obj, type)()
+            # Try if fget method is an other descriptor
+            return self._fget.__get__(obj, the_type)()
         except:
             pass
 
@@ -66,19 +66,19 @@ class cloudio_attribute(object):
 
         try:
             # Try if fget method is an other descriptor
-            retValue = self._fget.__set__(obj, value)
+            ret_value = self._fget.__set__(obj, value)
         except:
             if not self._fset:
                 raise AttributeError('can\'t set attribute')
             # Use setter method to assign new value
-            retValue = self._fset.__get__(obj)(value)
+            ret_value = self._fset.__get__(obj)(value)
 
         # Update value on the cloud
         # Give as second parameter the value using the fget.__get__ property and
         # not the value parameter. It may be different.
     #        obj._updateCloudioAttribute(self._fget.__name__, self._fget.__get__(obj)())
         obj._updateCloudioAttribute(self._fget.__name__, self.__get__(obj))
-        return retValue
+        return ret_value
 
     def setter(self, fset):
         """Explicitly sets the setter method for the attribute.
@@ -87,7 +87,7 @@ class cloudio_attribute(object):
         if hasattr(self._fget, 'setter'):
             # Give the fset method to it. fset needs to be hierarchically seen a leaf method
             self._fget.setter(fset)
-            self._fset = self._fget     # Not sure if this is really necessary
+            self._fset = self._fget     # Not sure if this is really necessary
         else:
             self._fset = fset
         return self
@@ -159,17 +159,18 @@ class Model2CloudConnector(AttributeListener):
 
             # Create cloud.iO attributes and add them to the corresponding cloud.iO object
             for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
-                cloudioRuntimeObject = cloudioRuntimeNode.findObject([cloudioAttributeMapping['objectName'], 'objects'])
+                cloudio_runtime_object = cloudioRuntimeNode.findObject([cloudioAttributeMapping['objectName'],
+                                                                        'objects'])
 
-                if cloudioRuntimeObject is None:
+                if cloudio_runtime_object is None:
                     # Create object
-                    cloudioRuntimeObject = CloudioRuntimeObject()
+                    cloudio_runtime_object = CloudioRuntimeObject()
                     # Add object to the node
-                    cloudioRuntimeNode.addObject(cloudioAttributeMapping['objectName'], cloudioRuntimeObject)
+                    cloudioRuntimeNode.addObject(cloudioAttributeMapping['objectName'], cloudio_runtime_object)
 
                 # Add attribute to object
-                cloudioRuntimeObject.addAttribute(name=cloudioAttributeMapping['attributeName'],
-                                                  type=cloudioAttributeMapping['attributeType'])
+                cloudio_runtime_object.addAttribute(name=cloudioAttributeMapping['attributeName'],
+                                                    type=cloudioAttributeMapping['attributeType'])
 
             # Add node to endpoint
             cloudioEndpoint.addNode(self.__class__.__name__, cloudioRuntimeNode)
@@ -184,39 +185,70 @@ class Model2CloudConnector(AttributeListener):
         assert self._cloudioNode
 
         for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
-            # Add listener to attributes that can be changed from the cloud (constraint: 'write')
+            # Add listener to attributes that can be changed from the cloud (constraint: 'write')
             if 'write' in cloudioAttributeMapping['constraints']:
-                locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
-                                 cloudioAttributeMapping['objectName'], 'objects']
-                cloudioAttribute = self._cloudioNode.findAttribute(locationStack)
+                if 'topic' in cloudioAttributeMapping:
+                    # take new style
 
-                if cloudioAttribute:
-                    cloudioAttribute.addListener(self)
+                    # Convert from 'human readable topic' to 'location stack' representation
+                    location_stack = self._location_stack_from_topic(cloudioAttributeMapping['topic'])
+                else:
+                    self.log.warning('Mapping entries \'objectName\' and \'attributeName\' will be replaced by '
+                                     '\'topic\' in future releases! Consider updating your code!')
+                    location_stack = [cloudioAttributeMapping['attributeName'], 'attributes',
+                                      cloudioAttributeMapping['objectName'], 'objects']
+                cloudio_attribute_object = self._cloudioNode.findAttribute(location_stack)
+
+                if cloudio_attribute_object:
+                    cloudio_attribute_object.addListener(self)
                 else:
                     self.log.warning('Could not map to Cloud.iO attribute. Cloud.iO attribute \'%s/%s\' not found!' %
                                      (cloudioAttributeMapping['objectName'], cloudioAttributeMapping['attributeName']))
+
+    def _location_stack_from_topic(self, topic, take_raw_topic=False):
+        """Converts attribute topic from 'human readable topic' to 'location stack' representation.
+        """
+        assert isinstance(topic, str)
+
+        topic_levels = topic.split('.')
+        # Remove first entry if it is the name of the cloud.iO node
+        if not take_raw_topic and topic_levels[0] == self._cloudioNode.getName():
+            topic_levels = topic_levels[1:]
+
+        # Add entries 'objects' and 'attributes' as needed
+        expanded_topic_levels = []
+        for index, topic_level in enumerate(topic_levels):
+            if index < len(topic_levels) - 1:
+                expanded_topic_levels.append('objects')
+            else:
+                expanded_topic_levels.append('attributes')
+            expanded_topic_levels.append(topic_level)
+
+        # Reverse topic_level entries
+        location_stack = expanded_topic_levels[::-1]
+        return location_stack
 
     def attributeHasChanged(self, cloudioAttribute):
         """Implementation of AttributeListener interface
 
         This method is called if an attribute change comes from the cloud.
         """
-        foundModelAttribute = False
-        modelAttributeName = None
-        cloudioAttributeMapping = None
+        found_model_attribute = False
+        model_attribute_name = None
+        cloudio_attribute_mapping = None
 
         # Get the corresponding mapping
         for modAttrName, clAttMapping in iteritems(self._attributeMapping):
             if clAttMapping['objectName'] == cloudioAttribute.getParent().getName() and \
                clAttMapping['attributeName'] == cloudioAttribute.getName() and \
-                            'write' in clAttMapping['constraints']:
-                modelAttributeName = modAttrName
-                cloudioAttributeMapping = clAttMapping
+                    'write' in clAttMapping['constraints']:
+                model_attribute_name = modAttrName
+                cloudio_attribute_mapping = clAttMapping
                 break
 
         # Leave if nothing found
-        if modelAttributeName is None:
-            return foundModelAttribute
+        if model_attribute_name is None:
+            return found_model_attribute
 
         # Strategy:
         # 1. Search method with same name
@@ -224,44 +256,45 @@ class Model2CloudConnector(AttributeListener):
         # 3. Search the attribute and access it directly
 
         # Check if provided name is already a method
-        if not foundModelAttribute:
-            if hasattr(self, modelAttributeName):
-                method = getattr(self, modelAttributeName)
+        if not found_model_attribute:
+            if hasattr(self, model_attribute_name):
+                method = getattr(self, model_attribute_name)
                 # Try to directly access it
                 if inspect.ismethod(method):
                     try:  # Try to call the method. Maybe it fails because of wrong number of parameters
                         method(cloudioAttribute.getValue())  # Call method with an pass value py parameter
-                        foundModelAttribute = True
+                        found_model_attribute = True
                     except: pass
 
         # Try to set attribute using setter method
-        if not foundModelAttribute:
+        if not found_model_attribute:
             # Try to find a setter method
-            if modelAttributeName[0:3] == 'set':
-                setMethodName = modelAttributeName
+            if model_attribute_name[0:3] == 'set':
+                set_method_name = model_attribute_name
             else:
-                setMethodName = 'set' + modelAttributeName[0].upper() + modelAttributeName[1:]
-            if hasattr(self, setMethodName):
-                method = getattr(self, setMethodName)
+                set_method_name = 'set' + model_attribute_name[0].upper() + model_attribute_name[1:]
+            if hasattr(self, set_method_name):
+                method = getattr(self, set_method_name)
                 if inspect.ismethod(method):
-                    method(cloudioAttribute.getValue()) # Call method with an pass value py parameter
-                    foundModelAttribute = True
+                    method(cloudioAttribute.getValue())     # Call method with an pass value py parameter
+                    found_model_attribute = True
 
         # Try to set attribute by name
-        if hasattr(self, modelAttributeName):
-            if hasattr(self, modelAttributeName):
-                attr = getattr(self, modelAttributeName)
+        if hasattr(self, model_attribute_name):
+            if hasattr(self, model_attribute_name):
+                attr = getattr(self, model_attribute_name)
                 # It should not be a method
                 if not inspect.ismethod(attr):
-                    setattr(self, modelAttributeName, cloudioAttribute.getValue())
-                    foundModelAttribute = True
+                    setattr(self, model_attribute_name, cloudioAttribute.getValue())
+                    found_model_attribute = True
 
-        if not foundModelAttribute:
+        if not found_model_attribute:
             self.log.info('Did not find attribute for \'%s\'!' % cloudioAttribute.getName())
         else:
-            self.log.info('Cloud.iO @set attribute \'' + modelAttributeName + '\' to ' + str(cloudioAttribute.getValue()))
+            self.log.info('Cloud.iO @set attribute \'' + model_attribute_name + '\' to ' +
+                          str(cloudioAttribute.getValue()))
 
-        return foundModelAttribute
+        return found_model_attribute
 
     def _updateCloudioAttribute(self, modelAttributeName, modelAttributeValue, force=False):
         """Updates value of the attribute on the cloud.
@@ -271,21 +304,32 @@ class Model2CloudConnector(AttributeListener):
         if (self.hasValidData() or force) and self._cloudioNode:
             if modelAttributeName in self._attributeMapping:
                 # Get cloudio mapping for the model attribute
-                cloudioAttributeMapping = self._attributeMapping[modelAttributeName]
+                cloudio_attribute_mapping = self._attributeMapping[modelAttributeName]
 
-                # Construct the location stack (inverse topic structure)
-                locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
-                                 cloudioAttributeMapping['objectName'], 'objects']
+                if 'topic' in cloudio_attribute_mapping and cloudio_attribute_mapping['topic']:
+                    location_stack = self._location_stack_from_topic(cloudio_attribute_mapping['topic'])
+                else:
 
-                if 'toCloudioValueConverter' in cloudioAttributeMapping:
-                    modelAttributeValue = cloudioAttributeMapping['toCloudioValueConverter'](modelAttributeValue)
+                    # Construct the location stack (inverse topic structure)
+                    location_stack = [cloudio_attribute_mapping['attributeName'], 'attributes',
+                                      cloudio_attribute_mapping['objectName'], 'objects']
 
+                if 'toCloudioValueConverter' in cloudio_attribute_mapping:
+                    modelAttributeValue = cloudio_attribute_mapping['toCloudioValueConverter'](modelAttributeValue)
+
+                cloudio_attribute_object = None
                 # Get cloud.iO attribute
-                cloudioAttribute = self._cloudioNode.findAttribute(locationStack)
-                if cloudioAttribute:
+                try:
+                    cloudio_attribute_object = self._cloudioNode.findAttribute(location_stack)
+                except KeyError as e:
+                    self.log.warning('Did not find cloud.iO object/attribute %s!' % e)
+
+                if cloudio_attribute_object:
                     # Update only if force is true or model attribute value is different than that in the cloud
-                    if force is True or modelAttributeValue != cloudioAttribute.getValue():
-                        cloudioAttribute.setValue(modelAttributeValue)    # Set the new value on the cloud
+                    if force is True or modelAttributeValue != cloudio_attribute_object.getValue():
+                        cloudio_attribute_object.setValue(modelAttributeValue)    # Set the new value on the cloud
+                else:
+                    self.log.warning('Did not find cloud.iO attribute for \'%s\' model attribute!' % modelAttributeName)
             else:
                 self.log.warning('Did not find cloud.iO mapping for model attribute \'%s\'!' % modelAttributeName)
 
@@ -299,15 +343,14 @@ class Model2CloudConnector(AttributeListener):
 
             for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
                 # Only update attributes with 'read' or 'static' constraints
-                if 'read' in cloudioAttributeMapping['constraints'] or 'static' in cloudioAttributeMapping['constraints']:
+                if 'read' in cloudioAttributeMapping['constraints'] or 'static' in \
+                        cloudioAttributeMapping['constraints']:
                     try:
                         attributeValue = getattr(model, modelAttributeName)
                         # Update attribute in the cloud
                         self._updateCloudioAttribute(modelAttributeName, attributeValue, force)
                     except Exception as e:
                         self.log.warning('Attribute \'%s\' in model not found!' % modelAttributeName)
-                        pass
-
 
     def _forceUpdateOfCloudioAttributes(self, model=None):
         """Forces updated of cloud.iO attributes.
