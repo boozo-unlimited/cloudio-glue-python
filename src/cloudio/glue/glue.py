@@ -304,19 +304,30 @@ class Model2CloudConnector(AttributeListener):
                 # Get cloudio mapping for the model attribute
                 cloudioAttributeMapping = self._attributeMapping[modelAttributeName]
 
-                # Construct the location stack (inverse topic structure)
-                locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
-                                 cloudioAttributeMapping['objectName'], 'objects']
+                if 'topic' in cloudioAttributeMapping and cloudioAttributeMapping['topic']:
+                    locationStack = self._location_stack_from_topic(cloudioAttributeMapping['topic'])
+                else:
+
+                    # Construct the location stack (inverse topic structure)
+                    locationStack = [cloudioAttributeMapping['attributeName'], 'attributes',
+                                     cloudioAttributeMapping['objectName'], 'objects']
 
                 if 'toCloudioValueConverter' in cloudioAttributeMapping:
                     modelAttributeValue = cloudioAttributeMapping['toCloudioValueConverter'](modelAttributeValue)
 
+                cloudioAttribute = None
                 # Get cloud.iO attribute
-                cloudioAttribute = self._cloudioNode.findAttribute(locationStack)
+                try:
+                    cloudioAttribute = self._cloudioNode.findAttribute(locationStack)
+                except KeyError as e:
+                    self.log.warning('Did not find cloud.iO object/attribute %s!' % e)
+
                 if cloudioAttribute:
                     # Update only if force is true or model attribute value is different than that in the cloud
                     if force is True or modelAttributeValue != cloudioAttribute.getValue():
                         cloudioAttribute.setValue(modelAttributeValue)    # Set the new value on the cloud
+                else:
+                    self.log.warning('Did not find cloud.iO attribute for \'%s\' model attribute!' % modelAttributeName)
             else:
                 self.log.warning('Did not find cloud.iO mapping for model attribute \'%s\'!' % modelAttributeName)
 
