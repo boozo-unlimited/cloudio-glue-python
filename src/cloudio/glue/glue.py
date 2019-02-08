@@ -239,12 +239,23 @@ class Model2CloudConnector(AttributeListener):
 
         # Get the corresponding mapping
         for modAttrName, clAttMapping in iteritems(self._attributeMapping):
-            if clAttMapping['objectName'] == cloudioAttribute.getParent().getName() and \
-               clAttMapping['attributeName'] == cloudioAttribute.getName() and \
-                    'write' in clAttMapping['constraints']:
-                model_attribute_name = modAttrName
-                cloudio_attribute_mapping = clAttMapping
-                break
+            if 'topic' in clAttMapping:
+                if 'write' in clAttMapping['constraints']:
+                    location_stack = self._location_stack_from_topic(clAttMapping['topic'])
+
+                    if cloudioAttribute.getName() in location_stack[0] and \
+                            cloudioAttribute.getParent().getName() in location_stack[2]:
+                        model_attribute_name = modAttrName
+                        cloudio_attribute_mapping = clAttMapping
+                        break
+
+            else:
+                if clAttMapping['objectName'] == cloudioAttribute.getParent().getName() and \
+                   clAttMapping['attributeName'] == cloudioAttribute.getName() and \
+                        'write' in clAttMapping['constraints']:
+                    model_attribute_name = modAttrName
+                    cloudio_attribute_mapping = clAttMapping
+                    break
 
         # Leave if nothing found
         if model_attribute_name is None:
