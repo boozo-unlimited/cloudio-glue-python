@@ -273,7 +273,7 @@ class Model2CloudConnector(AttributeListener):
                 # Try to directly access it
                 if inspect.ismethod(method):
                     try:  # Try to call the method. Maybe it fails because of wrong number of parameters
-                        method(cloudioAttribute.getValue())  # Call method with an pass value py parameter
+                        method(cloudioAttribute.getValue())  # Call method and pass value by parameter
                         found_model_attribute = True
                     except: pass
 
