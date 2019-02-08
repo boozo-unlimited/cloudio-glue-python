@@ -291,13 +291,14 @@ class Model2CloudConnector(AttributeListener):
                     found_model_attribute = True
 
         # Try to set attribute by name
-        if hasattr(self, model_attribute_name):
+        if not found_model_attribute:
             if hasattr(self, model_attribute_name):
-                attr = getattr(self, model_attribute_name)
-                # It should not be a method
-                if not inspect.ismethod(attr):
-                    setattr(self, model_attribute_name, cloudioAttribute.getValue())
-                    found_model_attribute = True
+                if hasattr(self, model_attribute_name):
+                    attr = getattr(self, model_attribute_name)
+                    # It should not be a method
+                    if not inspect.ismethod(attr):
+                        setattr(self, model_attribute_name, cloudioAttribute.getValue())
+                        found_model_attribute = True
 
         if not found_model_attribute:
             self.log.info('Did not find attribute for \'%s\'!' % cloudioAttribute.getName())
