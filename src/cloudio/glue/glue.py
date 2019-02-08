@@ -262,9 +262,35 @@ class Model2CloudConnector(AttributeListener):
             return found_model_attribute
 
         # Strategy:
-        # 1. Search method with same name
-        # 2. Search setter method of attribute
-        # 3. Search the attribute and access it directly
+        # 1. Try to call method 'on_attribute_set_from_cloud(attribute_name, cloudio_attribute)'
+        # 2. Search method with 'set_<attribute-name>_from_cloud(value)
+        # 3. Search method with same name
+        # 4. Search setter method of attribute
+        # 5. Search the attribute and access it directly
+
+        # Try call method 'on_attribute_set_from_cloud(attribute_name, cloudio_attribute)'
+        if not found_model_attribute:
+            general_callback_method_name = 'on_attribute_set_from_cloud'
+            if hasattr(self, general_callback_method_name):
+                method = getattr(self, general_callback_method_name)
+                if inspect.ismethod(method):
+                    try:  # Try to call the method. Maybe it fails because of wrong number of parameters
+                        method(model_attribute_name, cloudioAttribute)
+                        found_model_attribute = True
+                    except TypeError as type_error:
+                        self.log.error(u'Exception : %s' % type_error)
+
+        # Search method with 'set_<attribute-name>_from_cloud(value)
+        if not found_model_attribute:
+            specific_callback_method_name = 'on_' + model_attribute_name + '_set_from_cloud'
+            if hasattr(self, specific_callback_method_name):
+                method = getattr(self, specific_callback_method_name)
+                if inspect.ismethod(method):
+                    try:  # Try to call the method. Maybe it fails because of wrong number of parameters
+                        method(cloudioAttribute.getValue())
+                        found_model_attribute = True
+                    except TypeError as type_error:
+                        self.log.error(u'Exception : %s' % type_error)
 
         # Check if provided name is already a method
         if not found_model_attribute:
