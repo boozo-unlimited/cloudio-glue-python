@@ -357,10 +357,16 @@ class Model2CloudConnector(AttributeListener):
                 if 'topic' in cloudio_attribute_mapping and cloudio_attribute_mapping['topic']:
                     location_stack = self._location_stack_from_topic(cloudio_attribute_mapping['topic'])
                 else:
+                    if 'attributeName' in cloudio_attribute_mapping:
+                        # Construct the location stack (inverse topic structure)
+                        location_stack = [cloudio_attribute_mapping['attributeName'], 'attributes',
+                                          cloudio_attribute_mapping['objectName'], 'objects']
+                    else:
+                        location_stack = []
 
-                    # Construct the location stack (inverse topic structure)
-                    location_stack = [cloudio_attribute_mapping['attributeName'], 'attributes',
-                                      cloudio_attribute_mapping['objectName'], 'objects']
+                # Leave if location_stack could not be constructed
+                if not location_stack:
+                    return
 
                 if 'toCloudioValueConverter' in cloudio_attribute_mapping:
                     modelAttributeValue = cloudio_attribute_mapping['toCloudioValueConverter'](modelAttributeValue)
