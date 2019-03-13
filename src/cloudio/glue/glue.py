@@ -207,6 +207,10 @@ class Model2CloudConnector(AttributeListener):
 
     def _location_stack_from_topic(self, topic, take_raw_topic=False):
         """Converts attribute topic from 'human readable topic' to 'location stack' representation.
+
+        Example:
+            topic: 'afe.core.properties.user-pwm-enable' gets converted to
+            location_stack: ['user-pwm-enable', 'attributes', 'properties', 'objects', 'core', 'objects']
         """
         assert isinstance(topic, str)
 
@@ -336,6 +340,12 @@ class Model2CloudConnector(AttributeListener):
 
     def _updateCloudioAttribute(self, modelAttributeName, modelAttributeValue, force=False):
         """Updates value of the attribute on the cloud.
+
+        Only one thread should be responsible to call this method, means this
+        method is not thread-safe.
+
+        It might not be a good idea to call this method using the thread serving the MQTT
+        client connection!
         """
         assert not inspect.ismethod(modelAttributeValue), 'Value must be of standard type!'
 
