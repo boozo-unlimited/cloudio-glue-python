@@ -1,6 +1,14 @@
 # Changelog
 
+## 0.1.4 - (2019-03-15)
+### Implemented enhancements:
+- Added 'topic' entry to cloudio mapping to improve support attribute mapping
+- Improved attribute search strategies when changes arrive from the cloud
+### Fixed bugs:
+- Added missing check to 'found_model_attribute'
+
 ## 0.1.3 - (2019-02-07)
+### Implemented enhancements:
 - Started to introduce 'topic' mapping entry. Will replace
   'objectName' and 'attributeName' in the future
 
@@ -12,7 +20,7 @@
 
 ## 0.1.1 - (2018-05-15)
 ### Implemented enhancements:
-- Improved python 3 compatibility 
+- Improved python 3 compatibility
 ### Fixed bugs:
 - Minor bug fixes
 
