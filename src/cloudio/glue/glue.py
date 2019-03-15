@@ -207,6 +207,10 @@ class Model2CloudConnector(AttributeListener):
 
     def _location_stack_from_topic(self, topic, take_raw_topic=False):
         """Converts attribute topic from 'human readable topic' to 'location stack' representation.
+
+        Example:
+            topic: 'afe.core.properties.user-pwm-enable' gets converted to
+            location_stack: ['user-pwm-enable', 'attributes', 'properties', 'objects', 'core', 'objects']
         """
         assert isinstance(topic, str)
 
@@ -239,21 +243,58 @@ class Model2CloudConnector(AttributeListener):
 
         # Get the corresponding mapping
         for modAttrName, clAttMapping in iteritems(self._attributeMapping):
-            if clAttMapping['objectName'] == cloudioAttribute.getParent().getName() and \
-               clAttMapping['attributeName'] == cloudioAttribute.getName() and \
-                    'write' in clAttMapping['constraints']:
-                model_attribute_name = modAttrName
-                cloudio_attribute_mapping = clAttMapping
-                break
+            if 'topic' in clAttMapping:
+                if 'write' in clAttMapping['constraints']:
+                    location_stack = self._location_stack_from_topic(clAttMapping['topic'])
+
+                    if cloudioAttribute.getName() in location_stack[0] and \
+                            cloudioAttribute.getParent().getName() in location_stack[2]:
+                        model_attribute_name = modAttrName
+                        cloudio_attribute_mapping = clAttMapping
+                        break
+
+            else:
+                if clAttMapping['objectName'] == cloudioAttribute.getParent().getName() and \
+                   clAttMapping['attributeName'] == cloudioAttribute.getName() and \
+                        'write' in clAttMapping['constraints']:
+                    model_attribute_name = modAttrName
+                    cloudio_attribute_mapping = clAttMapping
+                    break
 
         # Leave if nothing found
         if model_attribute_name is None:
             return found_model_attribute
 
         # Strategy:
-        # 1. Search method with same name
-        # 2. Search setter method of attribute
-        # 3. Search the attribute and access it directly
+        # 1. Try to call method 'on_attribute_set_from_cloud(attribute_name, cloudio_attribute)'
+        # 2. Search method with 'set_<attribute-name>_from_cloud(value)
+        # 3. Search method with same name
+        # 4. Search setter method of attribute
+        # 5. Search the attribute and access it directly
+
+        # Try call method 'on_attribute_set_from_cloud(attribute_name, cloudio_attribute)'
+        if not found_model_attribute:
+            general_callback_method_name = 'on_attribute_set_from_cloud'
+            if hasattr(self, general_callback_method_name):
+                method = getattr(self, general_callback_method_name)
+                if inspect.ismethod(method):
+                    try:  # Try to call the method. Maybe it fails because of wrong number of parameters
+                        method(model_attribute_name, cloudioAttribute)
+                        found_model_attribute = True
+                    except TypeError as type_error:
+                        self.log.error(u'Exception : %s' % type_error)
+
+        # Search method with 'set_<attribute-name>_from_cloud(value)
+        if not found_model_attribute:
+            specific_callback_method_name = 'on_' + model_attribute_name + '_set_from_cloud'
+            if hasattr(self, specific_callback_method_name):
+                method = getattr(self, specific_callback_method_name)
+                if inspect.ismethod(method):
+                    try:  # Try to call the method. Maybe it fails because of wrong number of parameters
+                        method(cloudioAttribute.getValue())
+                        found_model_attribute = True
+                    except TypeError as type_error:
+                        self.log.error(u'Exception : %s' % type_error)
 
         # Check if provided name is already a method
         if not found_model_attribute:
@@ -262,7 +303,7 @@ class Model2CloudConnector(AttributeListener):
                 # Try to directly access it
                 if inspect.ismethod(method):
                     try:  # Try to call the method. Maybe it fails because of wrong number of parameters
-                        method(cloudioAttribute.getValue())  # Call method with an pass value py parameter
+                        method(cloudioAttribute.getValue())  # Call method and pass value by parameter
                         found_model_attribute = True
                     except: pass
 
@@ -280,13 +321,14 @@ class Model2CloudConnector(AttributeListener):
                     found_model_attribute = True
 
         # Try to set attribute by name
-        if hasattr(self, model_attribute_name):
+        if not found_model_attribute:
             if hasattr(self, model_attribute_name):
-                attr = getattr(self, model_attribute_name)
-                # It should not be a method
-                if not inspect.ismethod(attr):
-                    setattr(self, model_attribute_name, cloudioAttribute.getValue())
-                    found_model_attribute = True
+                if hasattr(self, model_attribute_name):
+                    attr = getattr(self, model_attribute_name)
+                    # It should not be a method
+                    if not inspect.ismethod(attr):
+                        setattr(self, model_attribute_name, cloudioAttribute.getValue())
+                        found_model_attribute = True
 
         if not found_model_attribute:
             self.log.info('Did not find attribute for \'%s\'!' % cloudioAttribute.getName())
@@ -298,6 +340,12 @@ class Model2CloudConnector(AttributeListener):
 
     def _updateCloudioAttribute(self, modelAttributeName, modelAttributeValue, force=False):
         """Updates value of the attribute on the cloud.
+
+        Only one thread should be responsible to call this method, means this
+        method is not thread-safe.
+
+        It might not be a good idea to call this method using the thread serving the MQTT
+        client connection!
         """
         assert not inspect.ismethod(modelAttributeValue), 'Value must be of standard type!'
 
@@ -309,10 +357,16 @@ class Model2CloudConnector(AttributeListener):
                 if 'topic' in cloudio_attribute_mapping and cloudio_attribute_mapping['topic']:
                     location_stack = self._location_stack_from_topic(cloudio_attribute_mapping['topic'])
                 else:
+                    if 'attributeName' in cloudio_attribute_mapping:
+                        # Construct the location stack (inverse topic structure)
+                        location_stack = [cloudio_attribute_mapping['attributeName'], 'attributes',
+                                          cloudio_attribute_mapping['objectName'], 'objects']
+                    else:
+                        location_stack = []
 
-                    # Construct the location stack (inverse topic structure)
-                    location_stack = [cloudio_attribute_mapping['attributeName'], 'attributes',
-                                      cloudio_attribute_mapping['objectName'], 'objects']
+                # Leave if location_stack could not be constructed
+                if not location_stack:
+                    return
 
                 if 'toCloudioValueConverter' in cloudio_attribute_mapping:
                     modelAttributeValue = cloudio_attribute_mapping['toCloudioValueConverter'](modelAttributeValue)
