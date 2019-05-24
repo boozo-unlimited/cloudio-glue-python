@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 - (2019-05-24)
+### Implemented enhancements:
+- Added create_cloudio_object() method to Model2CloudConnector class
+
 ## 0.1.4 - (2019-03-15)
 ### Implemented enhancements:
 - Added 'topic' entry to cloudio mapping to improve support attribute mapping
