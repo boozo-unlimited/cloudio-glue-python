@@ -159,18 +159,28 @@ class Model2CloudConnector(AttributeListener):
 
             # Create cloud.iO attributes and add them to the corresponding cloud.iO object
             for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
-                cloudio_runtime_object = cloudioRuntimeNode.findObject([cloudioAttributeMapping['objectName'],
-                                                                        'objects'])
+                if 'topic' in cloudioAttributeMapping:
+                    # Convert from 'human readable topic' to 'location stack' representation
+                    location_stack = self._location_stack_from_topic(cloudioAttributeMapping['topic'])
+                    # Get the cloudio object needed to add the attribute. Create object branch structure
+                    # if needed
+                    cloudio_runtime_object = self.create_cloudio_object(cloudioRuntimeNode, location_stack.copy())
 
-                if cloudio_runtime_object is None:
-                    # Create object
-                    cloudio_runtime_object = CloudioRuntimeObject()
-                    # Add object to the node
-                    cloudioRuntimeNode.addObject(cloudioAttributeMapping['objectName'], cloudio_runtime_object)
+                    # Add attribute to object
+                    cloudio_runtime_object.addAttribute(name=location_stack[0],
+                                                        type=cloudioAttributeMapping['attributeType'])
+                else:
+                    cloudio_runtime_object = cloudioRuntimeNode.findObject([cloudioAttributeMapping['objectName'],
+                                                                            'objects'])
+                    if cloudio_runtime_object is None:
+                        # Create object
+                        cloudio_runtime_object = CloudioRuntimeObject()
+                        # Add object to the node
+                        cloudioRuntimeNode.addObject(cloudioAttributeMapping['objectName'], cloudio_runtime_object)
 
-                # Add attribute to object
-                cloudio_runtime_object.addAttribute(name=cloudioAttributeMapping['attributeName'],
-                                                    type=cloudioAttributeMapping['attributeType'])
+                    # Add attribute to object
+                    cloudio_runtime_object.addAttribute(name=cloudioAttributeMapping['attributeName'],
+                                                        type=cloudioAttributeMapping['attributeType'])
 
             # Add node to endpoint
             cloudioEndpoint.addNode(self.__class__.__name__, cloudioRuntimeNode)
@@ -237,6 +247,9 @@ class Model2CloudConnector(AttributeListener):
     def _location_stack_from_topic(self, topic, take_raw_topic=False):
         """Converts attribute topic from 'human readable topic' to 'location stack' representation.
 
+        :return A list containing the location stack
+        :rtype list
+
         Example:
             topic: 'afe.core.properties.user-pwm-enable' gets converted to
             location_stack: ['user-pwm-enable', 'attributes', 'properties', 'objects', 'core', 'objects']
@@ -245,7 +258,7 @@ class Model2CloudConnector(AttributeListener):
 
         topic_levels = topic.split('.')
         # Remove first entry if it is the name of the cloud.iO node
-        if not take_raw_topic and topic_levels[0] == self._cloudioNode.getName():
+        if not take_raw_topic and self._cloudioNode and topic_levels[0] == self._cloudioNode.getName():
             topic_levels = topic_levels[1:]
 
         # Add entries 'objects' and 'attributes' as needed
