@@ -179,6 +179,35 @@ class Model2CloudConnector(AttributeListener):
             self.setCloudioBuddy(cloudioRuntimeNode)
         else:
             self.log.warning(u'Attribute \'_attributeMapping\' needs to be initialized to create cloud.iO node!')
+            
+    def create_cloudio_object(self, cloudio_runtime_node_or_object, location_stack):
+        """Creates and returns the object structure described in location stack.
+        
+        If the object structure is already present in the node, the last branch object is returned.
+
+        :param cloudio_runtime_node_or_object The node/object in where to search for the cloudio object
+        :type cloudio_runtime_node_or_object CloudioRuntimeNode or CloudioRuntimeObject
+        :param location_stack The location stack
+        :return list
+        :rtype CloudioRuntimeObject
+        """
+
+        object_stack = location_stack[-2:]           # Get next branch information (last two elements)
+        location_stack = location_stack[:-2]        # and remove it from location stack
+        
+        if object_stack[-1] == 'objects':   # Check last element in list
+            cloudio_runtime_object = cloudio_runtime_node_or_object.findObject(object_stack.copy())
+            if not cloudio_runtime_object:
+                from cloudio.cloudio_runtime_object import CloudioRuntimeObject
+
+                # Create object
+                cloudio_runtime_object = CloudioRuntimeObject()
+                 # Add object to the node (or object)
+                cloudio_runtime_node_or_object.addObject(object_stack[0], cloudio_runtime_object)
+
+            # Recursively create/get objects
+            return self.create_cloudio_object(cloudio_runtime_object, location_stack)
+        return cloudio_runtime_node_or_object
 
     def _setupAttributeMapping(self):
         assert self._attributeMapping
