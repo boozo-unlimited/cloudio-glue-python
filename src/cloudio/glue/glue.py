@@ -241,8 +241,14 @@ class Model2CloudConnector(AttributeListener):
                 if cloudio_attribute_object:
                     cloudio_attribute_object.addListener(self)
                 else:
-                    self.log.warning('Could not map to Cloud.iO attribute. Cloud.iO attribute \'%s/%s\' not found!' %
-                                     (cloudioAttributeMapping['objectName'], cloudioAttributeMapping['attributeName']))
+                    if 'topic' in cloudioAttributeMapping:
+                        self.log.warning(
+                            'Could not map to Cloud.iO attribute. Cloud.iO attribute \'%s\' not found!' %
+                            cloudioAttributeMapping['topic'])
+                    else:
+                        self.log.warning(
+                            'Could not map to Cloud.iO attribute. Cloud.iO attribute \'%s/%s\' not found!' %
+                            (cloudioAttributeMapping['objectName'], cloudioAttributeMapping['attributeName']))
 
     def _location_stack_from_topic(self, topic, take_raw_topic=False):
         """Converts attribute topic from 'human readable topic' to 'location stack' representation.
