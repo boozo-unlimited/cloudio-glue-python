@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-from six import iteritems
 import os
 import inspect
 import logging
 
 
-from cloudio.interface.attribute_listener import AttributeListener
+from cloudio.endpoint.interface.attribute_listener import AttributeListener
 
 version = ''
 # Get cloudio-glue-python version info from init file
@@ -155,10 +154,10 @@ class Model2CloudConnector(AttributeListener):
         if self._attributeMapping is not None:
             # Create the node which will represent this object in the cloud
             cloudioRuntimeNode = CloudioRuntimeNode()
-            cloudioRuntimeNode.declareImplementedInterface(u'NodeInterface')
+            cloudioRuntimeNode.declareImplementedInterface('NodeInterface')
 
             # Create cloud.iO attributes and add them to the corresponding cloud.iO object
-            for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
+            for modelAttributeName, cloudioAttributeMapping in self._attributeMapping.items():
                 if 'topic' in cloudioAttributeMapping:
                     # Convert from 'human readable topic' to 'location stack' representation
                     location_stack = self._location_stack_from_topic(cloudioAttributeMapping['topic'])
@@ -188,7 +187,7 @@ class Model2CloudConnector(AttributeListener):
             # Connect cloud.iO node to this object
             self.setCloudioBuddy(cloudioRuntimeNode)
         else:
-            self.log.warning(u'Attribute \'_attributeMapping\' needs to be initialized to create cloud.iO node!')
+            self.log.warning('Attribute \'_attributeMapping\' needs to be initialized to create cloud.iO node!')
             
     def create_cloudio_object(self, cloudio_runtime_node_or_object, location_stack):
         """Creates and returns the object structure described in location stack.
@@ -223,7 +222,7 @@ class Model2CloudConnector(AttributeListener):
         assert self._attributeMapping
         assert self._cloudioNode
 
-        for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
+        for modelAttributeName, cloudioAttributeMapping in self._attributeMapping.items():
             # Add listener to attributes that can be changed from the cloud (constraint: 'write')
             if 'write' in cloudioAttributeMapping['constraints']:
                 if 'topic' in cloudioAttributeMapping:
@@ -236,7 +235,7 @@ class Model2CloudConnector(AttributeListener):
                                      '\'topic\' in future releases! Consider updating your code!')
                     location_stack = [cloudioAttributeMapping['attributeName'], 'attributes',
                                       cloudioAttributeMapping['objectName'], 'objects']
-                cloudio_attribute_object = self._cloudioNode.findAttribute(location_stack)
+                cloudio_attribute_object = self._cloudioNode.find_attribute(location_stack)
 
                 if cloudio_attribute_object:
                     cloudio_attribute_object.addListener(self)
@@ -264,7 +263,7 @@ class Model2CloudConnector(AttributeListener):
 
         topic_levels = topic.split('.')
         # Remove first entry if it is the name of the cloud.iO node
-        if not take_raw_topic and self._cloudioNode and topic_levels[0] == self._cloudioNode.getName():
+        if not take_raw_topic and self._cloudioNode and topic_levels[0] == self._cloudioNode.get_name():
             topic_levels = topic_levels[1:]
 
         # Add entries 'objects' and 'attributes' as needed
@@ -290,20 +289,20 @@ class Model2CloudConnector(AttributeListener):
         cloudio_attribute_mapping = None
 
         # Get the corresponding mapping
-        for modAttrName, clAttMapping in iteritems(self._attributeMapping):
+        for modAttrName, clAttMapping in self._attributeMapping.items():
             if 'topic' in clAttMapping:
                 if 'write' in clAttMapping['constraints']:
                     location_stack = self._location_stack_from_topic(clAttMapping['topic'])
 
-                    if cloudioAttribute.getName() in location_stack[0] and \
-                            cloudioAttribute.getParent().getName() in location_stack[2]:
+                    if cloudioAttribute.get_name() in location_stack[0] and \
+                            cloudioAttribute.getParent().get_name() in location_stack[2]:
                         model_attribute_name = modAttrName
                         cloudio_attribute_mapping = clAttMapping
                         break
 
             else:
-                if clAttMapping['objectName'] == cloudioAttribute.getParent().getName() and \
-                   clAttMapping['attributeName'] == cloudioAttribute.getName() and \
+                if clAttMapping['objectName'] == cloudioAttribute.getParent().get_name() and \
+                   clAttMapping['attributeName'] == cloudioAttribute.get_name() and \
                         'write' in clAttMapping['constraints']:
                     model_attribute_name = modAttrName
                     cloudio_attribute_mapping = clAttMapping
@@ -330,7 +329,7 @@ class Model2CloudConnector(AttributeListener):
                         method(model_attribute_name, cloudioAttribute)
                         found_model_attribute = True
                     except TypeError as type_error:
-                        self.log.error(u'Exception : %s' % type_error)
+                        self.log.error('Exception : %s' % type_error)
 
         # Search method with 'set_<attribute-name>_from_cloud(value)
         if not found_model_attribute:
@@ -342,7 +341,7 @@ class Model2CloudConnector(AttributeListener):
                         method(cloudioAttribute.getValue())
                         found_model_attribute = True
                     except TypeError as type_error:
-                        self.log.error(u'Exception : %s' % type_error)
+                        self.log.error('Exception : %s' % type_error)
 
         # Check if provided name is already a method
         if not found_model_attribute:
@@ -379,7 +378,7 @@ class Model2CloudConnector(AttributeListener):
                         found_model_attribute = True
 
         if not found_model_attribute:
-            self.log.info('Did not find attribute for \'%s\'!' % cloudioAttribute.getName())
+            self.log.info('Did not find attribute for \'%s\'!' % cloudioAttribute.get_name())
         else:
             self.log.info('Cloud.iO @set attribute \'' + model_attribute_name + '\' to ' +
                           str(cloudioAttribute.getValue()))
@@ -422,7 +421,7 @@ class Model2CloudConnector(AttributeListener):
                 cloudio_attribute_object = None
                 # Get cloud.iO attribute
                 try:
-                    cloudio_attribute_object = self._cloudioNode.findAttribute(location_stack)
+                    cloudio_attribute_object = self._cloudioNode.find_attribute(location_stack)
                 except KeyError as e:
                     self.log.warning('Did not find cloud.iO object/attribute %s!' % e)
 
@@ -443,7 +442,7 @@ class Model2CloudConnector(AttributeListener):
         if self.hasValidData() and self._cloudioNode:
             model = model if model is not None else self
 
-            for modelAttributeName, cloudioAttributeMapping in iteritems(self._attributeMapping):
+            for modelAttributeName, cloudioAttributeMapping in self._attributeMapping.items():
                 # Only update attributes with 'read' or 'static' constraints
                 if 'read' in cloudioAttributeMapping['constraints'] or 'static' in \
                         cloudioAttributeMapping['constraints']:
