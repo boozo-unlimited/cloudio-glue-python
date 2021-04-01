@@ -6,7 +6,7 @@ import inspect
 import logging
 
 
-from cloudio.endpoint.interface.attribute_listener import AttributeListener
+from cloudio.endpoint.interface import CloudioAttributeListener
 
 version = ''
 # Get cloudio-glue-python version info from init file
@@ -96,7 +96,7 @@ class cloudio_attribute(object):
         return self._fget.__name__
 
 
-class Model2CloudConnector(AttributeListener):
+class Model2CloudConnector(CloudioAttributeListener):
     """Connects a class to cloud.iO and provides helper methods to update attributes in the cloud.
 
     Inheriting from this class adds the possibility to update changes to cloud.iO.
@@ -148,13 +148,13 @@ class Model2CloudConnector(AttributeListener):
         :param cloudioEndpoint The endpoint to add the node to
         :type cloudioEndpoint CloudioEndpoint
         """
-        from cloudio.cloudio_runtime_node import CloudioRuntimeNode
-        from cloudio.cloudio_runtime_object import CloudioRuntimeObject
+        from cloudio.endpoint.runtime import CloudioRuntimeNode
+        from cloudio.endpoint.runtime import CloudioRuntimeObject
 
         if self._attributeMapping is not None:
             # Create the node which will represent this object in the cloud
             cloudioRuntimeNode = CloudioRuntimeNode()
-            cloudioRuntimeNode.declareImplementedInterface('NodeInterface')
+            cloudioRuntimeNode.declare_implemented_interface('NodeInterface')
 
             # Create cloud.iO attributes and add them to the corresponding cloud.iO object
             for modelAttributeName, cloudioAttributeMapping in self._attributeMapping.items():
@@ -166,23 +166,23 @@ class Model2CloudConnector(AttributeListener):
                     cloudio_runtime_object = self.create_cloudio_object(cloudioRuntimeNode, location_stack.copy())
 
                     # Add attribute to object
-                    cloudio_runtime_object.addAttribute(name=location_stack[0],
-                                                        type=cloudioAttributeMapping['attributeType'])
+                    cloudio_runtime_object.add_attribute(name=location_stack[0],
+                                                         atype=cloudioAttributeMapping['attributeType'])
                 else:
-                    cloudio_runtime_object = cloudioRuntimeNode.findObject([cloudioAttributeMapping['objectName'],
+                    cloudio_runtime_object = cloudioRuntimeNode.find_object([cloudioAttributeMapping['objectName'],
                                                                             'objects'])
                     if cloudio_runtime_object is None:
                         # Create object
                         cloudio_runtime_object = CloudioRuntimeObject()
                         # Add object to the node
-                        cloudioRuntimeNode.addObject(cloudioAttributeMapping['objectName'], cloudio_runtime_object)
+                        cloudioRuntimeNode.add_object(cloudioAttributeMapping['objectName'], cloudio_runtime_object)
 
                     # Add attribute to object
-                    cloudio_runtime_object.addAttribute(name=cloudioAttributeMapping['attributeName'],
-                                                        type=cloudioAttributeMapping['attributeType'])
+                    cloudio_runtime_object.add_attribute(name=cloudioAttributeMapping['attributeName'],
+                                                         atype=cloudioAttributeMapping['attributeType'])
 
             # Add node to endpoint
-            cloudioEndpoint.addNode(self.__class__.__name__, cloudioRuntimeNode)
+            cloudioEndpoint.add_node(self.__class__.__name__, cloudioRuntimeNode)
 
             # Connect cloud.iO node to this object
             self.setCloudioBuddy(cloudioRuntimeNode)
@@ -205,14 +205,14 @@ class Model2CloudConnector(AttributeListener):
         location_stack = location_stack[:-2]        # and remove it from location stack
         
         if object_stack[-1] == 'objects':   # Check last element in list
-            cloudio_runtime_object = cloudio_runtime_node_or_object.findObject(object_stack.copy())
+            cloudio_runtime_object = cloudio_runtime_node_or_object.find_object(object_stack.copy())
             if not cloudio_runtime_object:
-                from cloudio.cloudio_runtime_object import CloudioRuntimeObject
+                from cloudio.endpoint.runtime import CloudioRuntimeObject
 
                 # Create object
                 cloudio_runtime_object = CloudioRuntimeObject()
                  # Add object to the node (or object)
-                cloudio_runtime_node_or_object.addObject(object_stack[0], cloudio_runtime_object)
+                cloudio_runtime_node_or_object.add_object(object_stack[0], cloudio_runtime_object)
 
             # Recursively create/get objects
             return self.create_cloudio_object(cloudio_runtime_object, location_stack)
@@ -238,7 +238,7 @@ class Model2CloudConnector(AttributeListener):
                 cloudio_attribute_object = self._cloudioNode.find_attribute(location_stack)
 
                 if cloudio_attribute_object:
-                    cloudio_attribute_object.addListener(self)
+                    cloudio_attribute_object.add_listener(self)
                 else:
                     if 'topic' in cloudioAttributeMapping:
                         self.log.warning(
@@ -279,8 +279,8 @@ class Model2CloudConnector(AttributeListener):
         location_stack = expanded_topic_levels[::-1]
         return location_stack
 
-    def attributeHasChanged(self, cloudioAttribute):
-        """Implementation of AttributeListener interface
+    def attribute_has_changed(self, cloudioAttribute, from_cloud: bool):
+        """Implementation of CloudioAttributeListener interface
 
         This method is called if an attribute change comes from the cloud.
         """
@@ -295,13 +295,13 @@ class Model2CloudConnector(AttributeListener):
                     location_stack = self._location_stack_from_topic(clAttMapping['topic'])
 
                     if cloudioAttribute.get_name() in location_stack[0] and \
-                            cloudioAttribute.getParent().get_name() in location_stack[2]:
+                            cloudioAttribute.get_parent().get_name() in location_stack[2]:
                         model_attribute_name = modAttrName
                         cloudio_attribute_mapping = clAttMapping
                         break
 
             else:
-                if clAttMapping['objectName'] == cloudioAttribute.getParent().get_name() and \
+                if clAttMapping['objectName'] == cloudioAttribute.get_parent().get_name() and \
                    clAttMapping['attributeName'] == cloudioAttribute.get_name() and \
                         'write' in clAttMapping['constraints']:
                     model_attribute_name = modAttrName
@@ -338,7 +338,7 @@ class Model2CloudConnector(AttributeListener):
                 method = getattr(self, specific_callback_method_name)
                 if inspect.ismethod(method):
                     try:  # Try to call the method. Maybe it fails because of wrong number of parameters
-                        method(cloudioAttribute.getValue())
+                        method(cloudioAttribute.get_value())
                         found_model_attribute = True
                     except TypeError as type_error:
                         self.log.error('Exception : %s' % type_error)
@@ -350,7 +350,7 @@ class Model2CloudConnector(AttributeListener):
                 # Try to directly access it
                 if inspect.ismethod(method):
                     try:  # Try to call the method. Maybe it fails because of wrong number of parameters
-                        method(cloudioAttribute.getValue())  # Call method and pass value by parameter
+                        method(cloudioAttribute.get_value())  # Call method and pass value by parameter
                         found_model_attribute = True
                     except: pass
 
@@ -364,7 +364,7 @@ class Model2CloudConnector(AttributeListener):
             if hasattr(self, set_method_name):
                 method = getattr(self, set_method_name)
                 if inspect.ismethod(method):
-                    method(cloudioAttribute.getValue())     # Call method with an pass value py parameter
+                    method(cloudioAttribute.get_value())     # Call method with an pass value py parameter
                     found_model_attribute = True
 
         # Try to set attribute by name
@@ -374,14 +374,14 @@ class Model2CloudConnector(AttributeListener):
                     attr = getattr(self, model_attribute_name)
                     # It should not be a method
                     if not inspect.ismethod(attr):
-                        setattr(self, model_attribute_name, cloudioAttribute.getValue())
+                        setattr(self, model_attribute_name, cloudioAttribute.get_value())
                         found_model_attribute = True
 
         if not found_model_attribute:
             self.log.info('Did not find attribute for \'%s\'!' % cloudioAttribute.get_name())
         else:
             self.log.info('Cloud.iO @set attribute \'' + model_attribute_name + '\' to ' +
-                          str(cloudioAttribute.getValue()))
+                          str(cloudioAttribute.get_value()))
 
         return found_model_attribute
 
@@ -427,8 +427,8 @@ class Model2CloudConnector(AttributeListener):
 
                 if cloudio_attribute_object:
                     # Update only if force is true or model attribute value is different than that in the cloud
-                    if force is True or modelAttributeValue != cloudio_attribute_object.getValue():
-                        cloudio_attribute_object.setValue(modelAttributeValue)    # Set the new value on the cloud
+                    if force is True or modelAttributeValue != cloudio_attribute_object.get_value():
+                        cloudio_attribute_object.set_value(modelAttributeValue)    # Set the new value on the cloud
                 else:
                     self.log.warning('Did not find cloud.iO attribute for \'%s\' model attribute!' % modelAttributeName)
             else:
