@@ -14,7 +14,24 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-here = path.abspath(path.dirname(__file__))
+
+def read_version_info():
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                           'src/cloudio/glue/version.py')) as vf:
+        content = vf.readlines()
+        for line in content:
+            if '__version__' in line:
+                values = line.split('=')
+                version = values[1]
+                version = version.strip('\n')
+                version = version.strip('\r')
+                version = version.replace('\'', '')
+                version = version.strip(' ')
+                return version
+    return '0.0.0'
+
+
+__version__ = read_version_info()
 
 # Get the long description from the README file
 #with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -43,7 +60,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.5',  # Required
+    version=__version__,  # Required
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:

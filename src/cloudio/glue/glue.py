@@ -7,7 +7,7 @@ from cloudio.endpoint.interface import CloudioAttributeListener
 
 version = ''
 # Get cloudio-glue-python version info from init file
-with open(os.path.dirname(os.path.realpath(__file__)) + '/__init__.py') as vf:
+with open(os.path.dirname(os.path.realpath(__file__)) + '/version.py') as vf:
     content = vf.readlines()
     for line in content:
         if '__version__' in line:
