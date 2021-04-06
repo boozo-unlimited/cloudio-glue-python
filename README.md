@@ -24,7 +24,7 @@ The Model2CloudConnector class allows to synchonize some attributes of a class.
 Which attributes to synchonize is done with an attribute mapping.
 
 To use the Model2CloudConnector class you need to inherit from it and then
-specify which of the attributes to synchronize using the setAttributeMapping()
+specify which of the attributes to synchronize using the set_attribute_mapping()
 method. 
 
 ### Attribute Mapping
@@ -40,7 +40,7 @@ ComputerMouse class to the cloud:
             self._y = 0
 
             # Define the attributes which are going to be mapped to the cloud.iO
-            self.setAttributeMapping({'x': {'objectName': 'position', 'attributeName': 'x', 'attributeType': float,
+            self.set_attribute_mapping({'x': {'objectName': 'position', 'attributeName': 'x', 'attributeType': float,
                                             'constraints': ('read',)},  # ('read', 'write')
                                       'y': {'objectName': 'position', 'attributeName': 'y', 'attributeType': float,
                                             'constraints': ('read',)},
@@ -81,29 +81,29 @@ The example below shows the @cloudio_attribute decorator applied to the x and y 
 ```python
     class ComputerMouse(Model2CloudConnector)
 
-        def __init__()
+    def __init__()
 
-            self._x = 0
-            self._y = 0
+        self._x = 0
+        self._y = 0
 
-            # Define the attributes which are going to be mapped to the cloud.iO
-            self.setAttributeMapping({'x': {'objectName': 'position', 'attributeName': 'x', 'attributeType': float,
-                                            'constraints': ('read',)},  # ('read', 'write')
-                                      'y': {'objectName': 'position', 'attributeName': 'y', 'attributeType': float,
-                                            'constraints': ('read',)},
+        # Define the attributes which are going to be mapped to the cloud.iO
+        self.set_attribute_mapping({'x': {'objectName': 'position', 'attributeName': 'x', 'attributeType': float,
+                                          'constraints': ('read',)},  # ('read', 'write')
+                                    'y': {'objectName': 'position', 'attributeName': 'y', 'attributeType': float,
+                                          'constraints': ('read',)},
                                     })
 
-        @cloudio_attribute
-        def x(self): return self._x
+    @cloudio_attribute
+    def x(self): return self._x
 
-        @x.setter
-        def x(self, value): self._x = value
-        
-        @cloudio_attribute
-        def y(self): return self._y
+    @x.setter
+    def x(self, value): self._x = value
 
-        @y.setter
-        def y(self, value): self._y = value
+    @cloudio_attribute
+    def y(self): return self._y
+
+    @y.setter
+    def y(self, value): self._y = value
 ```
 
 Now every time the x or y property gets changed, the value is automatically updated to the cloud.
