@@ -51,7 +51,9 @@ class cloudio_attribute(object):
         try:
             # Try if fget method is another descriptor
             return self._fget.__get__(obj, the_type)()
-        except Exception:
+        except TypeError:
+            pass
+        except Exception as e:
             pass
 
         try:
