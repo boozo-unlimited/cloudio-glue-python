@@ -49,7 +49,7 @@ class cloudio_attribute(object):
         :return: A value
         """
         try:
-            # Try if fget method is an other descriptor
+            # Try if fget method is another descriptor
             return self._fget.__get__(obj, the_type)()
         except Exception:
             pass

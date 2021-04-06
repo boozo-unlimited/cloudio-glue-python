@@ -100,4 +100,4 @@ ENV/
 # mypy
 .mypy_cache/
 .idea/
-pyproject.toml
+Pipfile.lock
