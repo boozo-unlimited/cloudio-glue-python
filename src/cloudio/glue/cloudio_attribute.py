@@ -31,14 +31,8 @@ class cloudio_attribute(object):
             return self._fget.__get__(obj, the_type)()
         except TypeError:
             pass
-        except Exception as e:
-            pass
 
-        try:
-            return self._fget.__get__(obj)
-        except Exception:
-            # Call real fget method
-            return self._fget(obj)  # TODO: Check when this case arrives!
+        return self._fget.__get__(obj)
 
     def __set__(self, obj, value):
         """Assigns value to decorated attribute.
@@ -53,7 +47,7 @@ class cloudio_attribute(object):
             ret_value = self._fget.__set__(obj, value)
         except Exception:
             if not self._fset:
-                raise AttributeError('can\'t set attribute')
+                raise AttributeError('Can\'t set attribute. No setter provided!')
             # Use setter method to assign new value
             ret_value = self._fset.__get__(obj)(value)
 
@@ -65,8 +59,8 @@ class cloudio_attribute(object):
             # Give as second parameter the value using the fget.__get__ property and
             # not the value parameter. It may be different.
             #        obj._update_cloudio_attribute(self._fget.__name__, self._fget.__get__(obj)())
-            obj._update_cloudio_attribute(self._fget.__name__, self.__get__(obj))
-        except AttributeError:
+            obj._update_cloudio_attribute(self.__name__, self.__get__(obj))
+        except (AttributeError, TypeError):
             traceback.print_exc()
             callback_name = '_update_cloudio_attribute'
 
@@ -82,15 +76,20 @@ class cloudio_attribute(object):
     def setter(self, fset):
         """Explicitly sets the setter method for the attribute.
         """
-        # Check if fget method is an other descriptor
+        # Check if fget method is another descriptor
         if hasattr(self._fget, 'setter'):
             # Give the fset method to it. fset needs to be hierarchically seen a leaf method
             self._fget.setter(fset)
-            self._fset = self._fget  # Not sure if this is really necessary
+            self._fset = fset
         else:
             self._fset = fset
         return self
 
     @property
     def __name__(self):
-        return self._fget.__name__
+        try:
+            return self._fget.__name__
+        except AttributeError:
+            # @property does not have an attribute '__name__'. We need to go
+            # deeper to reach the name of the decorated method
+            return self._fget.fget.__name__

@@ -18,18 +18,25 @@ class TestCloudioGlueVersion(unittest.TestCase):
     log = logging.getLogger(__name__)
 
     def test_version_01(self):
-        from cloudio import endpoint
+        from cloudio import glue
 
-        print(endpoint.version)
+        print(glue.version)
 
-        self.assertTrue(isinstance(endpoint.version, str))
-        self.assertIsNot(endpoint.version, '')
-        self.assertTrue(len(endpoint.version.split('.')) == 3)  # Want to see 'x.y.z'
+        self.assertTrue(isinstance(glue.version, str))
+        self.assertIsNot(glue.version, '')
+        self.assertTrue(len(glue.version.split('.')) == 3)  # Want to see 'x.y.z'
 
     def test_version_02(self):
-        from cloudio.endpoint import version
+        from cloudio.glue import version
 
         print(version)
+
+        self.assertTrue(isinstance(version, str))
+        self.assertIsNot(version, '')
+        self.assertTrue(len(version.split('.')) == 3)  # Want to see 'x.y.z'
+
+    def test_version_03(self):
+        import cloudio.glue.version as version
 
         self.assertTrue(isinstance(version, str))
         self.assertIsNot(version, '')

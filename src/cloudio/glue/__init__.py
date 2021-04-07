@@ -7,7 +7,7 @@ import pkgutil
 __path__ = pkgutil.extend_path(__path__, __name__)
 
 import logging
-from .version import __version__
+from .version import __version__ as version
 from .cloudio_attribute import cloudio_attribute
 from .model_to_cloud_connector import Model2CloudConnector
 
@@ -16,4 +16,4 @@ logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s -
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.DEBUG)
 logging.getLogger(__name__).setLevel(logging.INFO)  # DEBUG, INFO, WARNING, ERROR, CRITICAL
-logging.getLogger(__name__).info(f'cloudio-glue-python version: {__version__}')
+logging.getLogger(__name__).info(f'cloudio-glue-python version: {version}')
