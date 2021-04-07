@@ -2,6 +2,7 @@
 
 import inspect
 import logging
+import traceback
 import os
 from cloudio.endpoint.interface import CloudioAttributeListener
 
@@ -63,9 +64,15 @@ class cloudio_attribute(object):
             return self._fget(obj)  # TODO: Check when this case arrives!
 
     def __set__(self, obj, value):
+        """Assigns value to decorated attribute.
+
+        :param obj: The composite instance containing the attribute
+        :param value: The value to assign to the attribute
+        :return: Value returned by the setter method.
+        """
 
         try:
-            # Try if fget method is an other descriptor
+            # Try if fget method is another descriptor
             ret_value = self._fget.__set__(obj, value)
         except Exception:
             if not self._fset:
@@ -73,11 +80,26 @@ class cloudio_attribute(object):
             # Use setter method to assign new value
             ret_value = self._fset.__get__(obj)(value)
 
-        # Update value on the cloud
-        # Give as second parameter the value using the fget.__get__ property and
-        # not the value parameter. It may be different.
-        #        obj._update_cloudio_attribute(self._fget.__name__, self._fget.__get__(obj)())
-        obj._update_cloudio_attribute(self._fget.__name__, self.__get__(obj))
+        try:
+            # Update value on the cloud by calling method '_update_cloudio_attribute'
+            # which must be provided by the instance having the cloudio_attribute
+            # decorated attribute.
+            #
+            # Give as second parameter the value using the fget.__get__ property and
+            # not the value parameter. It may be different.
+            #        obj._update_cloudio_attribute(self._fget.__name__, self._fget.__get__(obj)())
+            obj._update_cloudio_attribute(self._fget.__name__, self.__get__(obj))
+        except AttributeError:
+            traceback.print_exc()
+            callback_name = '_update_cloudio_attribute'
+
+            if not hasattr(obj, callback_name):
+                logging.error(f'Method \'{callback_name}\' not provided!')
+            else:
+                attr = getattr(obj, callback_name)
+                # It should be a method
+                if not inspect.ismethod(attr):
+                    logging.error(f'\'{callback_name}\' must be a method!')
         return ret_value
 
     def setter(self, fset):
