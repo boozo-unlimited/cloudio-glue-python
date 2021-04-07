@@ -16,7 +16,7 @@ class TestCloudioAttributeDecorator(unittest.TestCase):
 
     log = logging.getLogger(__name__)
 
-    @unittest.skip('because adding a new test')
+    # @unittest.skip('because adding a new test')
     def test_cloudio_attribute_getter(self):
         from cloudio.glue import cloudio_attribute
 
