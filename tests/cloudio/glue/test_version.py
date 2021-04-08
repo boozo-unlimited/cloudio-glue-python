@@ -45,6 +45,9 @@ class TestCloudioGlueVersion(unittest.TestCase):
 
 class TestCloudioGlueVersionMain(unittest.TestCase):
     """Test call version.py.
+
+    - https://medium.com/opsops/how-to-test-if-name-main-1928367290cb
+    - https://stackoverflow.com/questions/5850268/how-to-test-or-mock-if-name-main-contents
     """
 
     log = logging.getLogger(__name__)

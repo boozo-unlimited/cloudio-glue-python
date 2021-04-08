@@ -1,5 +1,7 @@
 # Cloud.iO Glue
 ![version](https://img.shields.io/pypi/v/cloudio-glue-python.svg)
+![coverage](docs/images/coverage.svg)
+
 
 ## Introduction
 This package is an extension to the 
