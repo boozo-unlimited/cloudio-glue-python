@@ -43,6 +43,24 @@ class TestCloudioGlueVersion(unittest.TestCase):
         self.assertTrue(len(version.split('.')) == 3)  # Want to see 'x.y.z'
 
 
+class TestCloudioGlueVersionMain(unittest.TestCase):
+    """Test call version.py.
+    """
+
+    log = logging.getLogger(__name__)
+
+    def setUp(self):
+        self.version = __import__('cloudio.glue.version', globals(), locals(), [''], 0)
+
+    def tearDown(self):
+        import sys
+        del sys.modules[self.version.__name__]
+
+    def test_version_04(self):
+        print('Calling version.py\'s main():')
+        self.version.main()
+
+
 if __name__ == '__main__':
 
     # Enable logging
