@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+build = "*"
+coverage = "*"
+coverage-badge = "*"
+twine = "*"
+
+[packages]
+# cloudio-common-python = {editable = true, path = "../cloudio-common-python"}
+# cloudio-endpoint-python = {editable = true, path = "../cloudio-endpoint-python"}
+cloudio-common-python = "*"
+cloudio-endpoint-python = "*"
+
+[requires]
+python_version = "3.9"

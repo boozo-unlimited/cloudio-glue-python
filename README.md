@@ -1,5 +1,7 @@
 # Cloud.iO Glue
 ![version](https://img.shields.io/pypi/v/cloudio-glue-python.svg)
+![coverage](docs/images/coverage.svg)
+
 
 ## Introduction
 This package is an extension to the 
@@ -7,56 +9,58 @@ This package is an extension to the
 package providing features not present in the 
 [java-endpoint](https://github.com/cloudio-project/cloudio-endpoint-java)
 implementation.
-It supports the developer with the Model2CloudConnector class and the 
+It supports the developer with the `Model2CloudConnector` class and the 
 'cloudio_attribute' decorator.
 
 The fast and simple solution to connect an object to the cloud is to inherit 
-the class from CloudioNode and automatically all attributes get
+the class from `CloudioNode` and automatically all attributes get
 synchronized to the cloud. The drawback here is that the developer does not
-have the choise to prohibit the synchonization of some attributes.
+have the choice to prohibit the synchronisation of some attributes.
 
-There is where the Model2CloudConnector class comes in. Inheriting from this
-class allows to specify which attribute should be synchronized to the cloud
+There is where the `Model2CloudConnector` class comes in. Inheriting from this
+class allows specifying which attribute should be synchronized to the cloud
 using the `attribute mapping` feature.
 
 ## Model2CloudConnector Class
-The Model2CloudConnector class allows to synchonize some attributes of a class.
-Which attributes to synchonize is done with an attribute mapping.
+The `Model2CloudConnector` class allows to synchronise some attributes of a class.
+Which attributes to synchronise is done with an attribute mapping.
 
-To use the Model2CloudConnector class you need to inherit from it and then
-specify which of the attributes to synchronize using the setAttributeMapping()
+To use the `Model2CloudConnector` class you need to inherit from it and then
+specify which of the attributes to synchronize using the `set_attribute_mapping()`
 method. 
 
 ### Attribute Mapping
-Here is an example on how to bring attributes (or properties) x and y of the
-ComputerMouse class to the cloud:
+Here is an example on how to bring attributes (or properties) `x` and `y` of the
+`ComputerMouse` class to the cloud:
 
 ```python
-    class ComputerMouse(Model2CloudConnector):
+from cloudio.glue import Model2CloudConnector    
 
-        def __init__(self):
+class ComputerMouse(Model2CloudConnector):
 
-            self._x = 0
-            self._y = 0
+    def __init__(self):
+        super(ComputerMouse, self).__init__()
+        self._x = 0
+        self._y = 0
 
-            # Define the attributes which are going to be mapped to the cloud.iO
-            self.setAttributeMapping({'x': {'objectName': 'position', 'attributeName': 'x', 'attributeType': float,
-                                            'constraints': ('read',)},  # ('read', 'write')
-                                      'y': {'objectName': 'position', 'attributeName': 'y', 'attributeType': float,
-                                            'constraints': ('read',)},
-                                    })
+        # Define the attributes which are going to be mapped to cloud.iO
+        self.set_attribute_mapping({'x': {'topic': 'position.x', 'attributeType': float,
+                                          'constraints': ('read',)},  # ('read', 'write')
+                                    'y': {'topic': 'position.y', 'attributeType': float,
+                                          'constraints': ('read',)},
+                                })
 
-        @property
-        def x(self): return self._x
+    @property
+    def x(self): return self._x
 
-        @x.setter
-        def x(self, value): self._x = value
-        
-        @property
-        def y(self): return self._y
+    @x.setter
+    def x(self, value): self._x = value
+    
+    @property
+    def y(self): return self._y
 
-        @y.setter
-        def y(self, value): self._y = value
+    @y.setter
+    def y(self, value): self._y = value
 ```
 
 ### Attribute Access Policy
@@ -74,37 +78,40 @@ An attribute can be automatically synchronized to the cloud by assigning
 the `cloudio_attribute` decorator to the property.
 
 To assign for example the decorator to the x property change the code above as follows. Remove
-the @property decorator and replace it with the @cloudio_attribute decorator.
+the @property decorator and replace it with the `@cloudio_attribute` decorator.
 
-The example below shows the @cloudio_attribute decorator applied to the x and y property:
+The example below shows the `@cloudio_attribute` decorator applied to the `x` and `y` property:
 
 ```python
-    class ComputerMouse(Model2CloudConnector)
+from cloudio.glue import Model2CloudConnector
+from cloudio.glue import cloudio_attribute
 
-        def __init__()
+class ComputerMouse(Model2CloudConnector):
 
-            self._x = 0
-            self._y = 0
+    def __init__(self):
+        super(ComputerMouse, self).__init__()
 
-            # Define the attributes which are going to be mapped to the cloud.iO
-            self.setAttributeMapping({'x': {'objectName': 'position', 'attributeName': 'x', 'attributeType': float,
-                                            'constraints': ('read',)},  # ('read', 'write')
-                                      'y': {'objectName': 'position', 'attributeName': 'y', 'attributeType': float,
-                                            'constraints': ('read',)},
+        self._x = 0
+        self._y = 0
+
+        # Define the attributes which are going to be mapped to cloud.iO
+        self.set_attribute_mapping({'x': {'topic': 'position.x', 'attributeType': float,
+                                          'constraints': ('read',)},  # ('read', 'write')
+                                    'y': {'topic': 'position.y', 'attributeType': float,
+                                          'constraints': ('read',)},
                                     })
 
-        @cloudio_attribute
-        def x(self): return self._x
+    @cloudio_attribute
+    def x(self): return self._x
 
-        @x.setter
-        def x(self, value): self._x = value
-        
-        @cloudio_attribute
-        def y(self): return self._y
+    @x.setter
+    def x(self, value): self._x = value
 
-        @y.setter
-        def y(self, value): self._y = value
+    @cloudio_attribute
+    def y(self): return self._y
+
+    @y.setter
+    def y(self, value): self._y = value
 ```
 
-Now every time the x or y property gets changed, the value is automatically updated to the cloud.
-
+Now every time the `x` or `y` property gets changed, the value is automatically updated to the cloud.
