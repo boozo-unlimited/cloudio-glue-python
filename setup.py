@@ -84,7 +84,7 @@ setup(
     #
     # This field corresponds to the "Home-Page" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
-    url='http://cloudio.hevs.ch',  # Optional
+    url='https://cloudio.hevs.ch',  # Optional
 
     project_url={
         "Bug Tracker": "https://github.com/boozo-unlimited/cloudio-glue-python/issues",

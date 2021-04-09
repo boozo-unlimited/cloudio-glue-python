@@ -4,6 +4,7 @@
 
 import logging
 import unittest
+
 from tests.cloudio.glue.paths import update_working_directory
 
 update_working_directory()  # Needed when: 'pipenv run python -m unittest tests/cloudio/glue/{this_file}.py'
@@ -65,7 +66,6 @@ class TestCloudioGlueVersionMain(unittest.TestCase):
 
 
 if __name__ == '__main__':
-
     # Enable logging
     logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
