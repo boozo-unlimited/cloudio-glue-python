@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0 - (2021-04-09)
+- Removed Python2 support
+- Reformatted code according to [PEP 8](https://www.python.org/dev/peps/pep-0008/)
+- Updated package structure
+- Added test coverage
+
 ## 0.1.5 - (2019-05-24)
 ### Implemented enhancements:
 - Added create_cloudio_object() method to Model2CloudConnector class
