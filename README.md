@@ -5,7 +5,7 @@
 
 ## Introduction
 This package is an extension to the 
-[cloudio-endpoint-python](https://github.com/cloudio-project/cloudio-endpoint-python/tree/master/src/cloudio) 
+[cloudio-endpoint-python](https://github.com/cloudio-project/cloudio-endpoint-python) 
 package providing features not present in the 
 [java-endpoint](https://github.com/cloudio-project/cloudio-endpoint-java)
 implementation.
@@ -20,6 +20,15 @@ have the choice to prohibit the synchronisation of some attributes.
 There is where the `Model2CloudConnector` class comes in. Inheriting from this
 class allows specifying which attribute should be synchronized to the cloud
 using the `attribute mapping` feature.
+
+## Download and Install
+The library is available on python's package distribution system [PyPi](https://pypi.python.org/).
+
+From the console you can download and install it using the following command:
+
+```
+   pip install cloudio-glue-python
+```
 
 ## Model2CloudConnector Class
 The `Model2CloudConnector` class allows to synchronise some attributes of a class.
