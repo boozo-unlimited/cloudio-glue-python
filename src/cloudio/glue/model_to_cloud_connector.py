@@ -205,8 +205,8 @@ class Model2CloudConnector(CloudioAttributeListener):
                 if 'write' in cl_att_mapping['constraints']:
                     location_stack = self._location_stack_from_topic(cl_att_mapping['topic'])
 
-                    if cloudio_attr.get_name() in location_stack[0] and \
-                            cloudio_attr.get_parent().get_name() in location_stack[2]:
+                    if cloudio_attr.get_name() == location_stack[0] and \
+                            cloudio_attr.get_parent().get_name() == location_stack[2]:
                         model_attribute_name = mod_attr_name
                         # cloudio_attribute_mapping = cl_att_mapping
                         break
