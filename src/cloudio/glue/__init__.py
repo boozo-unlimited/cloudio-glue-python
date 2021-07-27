@@ -11,9 +11,7 @@ from .version import __version__ as version
 from .cloudio_attribute import cloudio_attribute
 from .model_to_cloud_connector import Model2CloudConnector
 
-# Enable logging
-logging.basicConfig(format='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG)
-logging.getLogger(__name__).setLevel(logging.INFO)  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+# Do not output logs if logging module is not configured
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 logging.getLogger(__name__).info(f'cloudio-glue-python version: {version}')
