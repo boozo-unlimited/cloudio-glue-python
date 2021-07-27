@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1 - (2021-07-27)
+- Fixed issue [#3](https://github.com/boozo-unlimited/cloudio-glue-python/issues/3)
+
 ## 1.0.0 - (2021-04-09)
 - Removed Python2 support
 - Reformatted code according to [PEP 8](https://www.python.org/dev/peps/pep-0008/)
