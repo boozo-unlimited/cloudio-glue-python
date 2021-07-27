@@ -1,4 +1,5 @@
 # Cloud.iO Glue
+![python-version](https://img.shields.io/badge/python-3.x-blue.svg?style=flat)
 ![version](https://img.shields.io/pypi/v/cloudio-glue-python.svg)
 ![coverage](docs/images/coverage.svg)
 
