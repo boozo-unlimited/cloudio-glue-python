@@ -343,7 +343,8 @@ class Model2CloudConnector(CloudioAttributeListener):
                     if cloudio_attribute_object:
                         # Update only if force is true or model attribute value is different than that in the cloud
                         if force is True or model_attribute_value != cloudio_attribute_object.get_value():
-                            cloudio_attribute_object.set_value(model_attribute_value)  # Set the new value on the cloud
+                            if 'read' in cloudio_attribute_mapping['constraints']:
+                                cloudio_attribute_object.set_value(model_attribute_value)  # Set the new value on the cloud
                     else:
                         self.log.warning('Did not find cloud.iO attribute for \'{}\' model attribute!'.
                                          format(model_attribute_name))
