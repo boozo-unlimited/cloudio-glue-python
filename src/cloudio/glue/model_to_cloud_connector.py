@@ -205,11 +205,22 @@ class Model2CloudConnector(CloudioAttributeListener):
                 if 'write' in cl_att_mapping['constraints']:
                     location_stack = self._location_stack_from_topic(cl_att_mapping['topic'])
 
-                    if cloudio_attr.get_name() == location_stack[0] and \
-                            cloudio_attr.get_parent().get_name() == location_stack[2]:
-                        model_attribute_name = mod_attr_name
-                        # cloudio_attribute_mapping = cl_att_mapping
-                        break
+                    # check attribute name
+                    if cloudio_attr.get_name() == location_stack[0]:
+
+                        # check all parents objects
+                        compare_objects = True
+                        cloudio_obj = cloudio_attr.get_parent()
+                        for i in range(0, int((len(location_stack) - 2) / 2)):
+                            if location_stack[2 + i * 2] != cloudio_obj.get_name():
+                                compare_objects = False
+                                break
+                            cloudio_obj = cloudio_obj.get_parent_object_container()
+
+                        if compare_objects is True:
+                            model_attribute_name = mod_attr_name
+                            # cloudio_attribute_mapping = cl_att_mapping
+                            break
 
             else:
                 if cl_att_mapping['objectName'] == cloudio_attr.get_parent().get_name() and \
