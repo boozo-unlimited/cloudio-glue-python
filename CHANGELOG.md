@@ -1,4 +1,7 @@
 # Changelog
+## 1.0.2 - (2022-07-25)
+- Added pull request [#5](https://github.com/boozo-unlimited/cloudio-glue-python/pull/5): Add write only attributes
+- Added pull request [#6](https://github.com/boozo-unlimited/cloudio-glue-python/pull/6): Add support for objects in objects
 
 ## 1.0.1 - (2021-07-27)
 - Fixed issue [#3](https://github.com/boozo-unlimited/cloudio-glue-python/issues/3)
