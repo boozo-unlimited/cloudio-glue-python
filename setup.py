@@ -33,13 +33,10 @@ def read_version_info():
 
 __version__ = read_version_info()
 
+# Get the long description from the README file
 current_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(current_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
-
-# Get the long description from the README file
-# with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-#    long_description = f.read()
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
