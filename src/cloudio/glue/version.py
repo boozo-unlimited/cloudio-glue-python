@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Thomas Sterren'
-__contributors__ = []
-__version__ = '1.0.2'
+__contributors__ = ['Martin Meyer', ]
+__version__ = '1.0.3'
 
 
 def main():
