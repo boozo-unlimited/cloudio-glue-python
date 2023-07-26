@@ -32,7 +32,11 @@ class cloudio_attribute(object):
         except TypeError:
             pass
 
-        return self._fget.__get__(obj)
+        try:
+            return self._fget.__get__(obj)
+        except TypeError:
+            # Call real fget method
+            return self._fget(obj)  # Called for example when having ABC meta derived property
 
     def __set__(self, obj, value):
         """Assigns value to decorated attribute.
